@@ -26,17 +26,18 @@ mqttClient.on('message', (topic, msg) =>
     const device = topic.split('/')[1];
     const data = JSON.parse(msg);
     
-    if (data.availability === 'online' || data.state) 
+    if (data.state) 
     {
         const { value } = getState.get();
-        if (data.state && data.state !== value) 
-        {
-            mqttClient.publish(`zigbee2mqtt/${device}/set`, JSON.stringify({ state: value }));
-        } 
-        else if (data.availability === 'online') 
+        if (data.state !== value) 
         {
             mqttClient.publish(`zigbee2mqtt/${device}/set`, JSON.stringify({ state: value }));
         }
+    } 
+    else if (data.availability === 'online') 
+    {
+        const { value } = getState.get();
+        mqttClient.publish(`zigbee2mqtt/${device}/set`, JSON.stringify({ state: value }));
     }
 });
 
