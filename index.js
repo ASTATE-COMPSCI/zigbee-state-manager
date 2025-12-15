@@ -21,6 +21,25 @@ const setState = db.prepare('UPDATE state SET value = ? WHERE id = 1');
 
 mqttClient.on('connect', () => mqttClient.subscribe('zigbee2mqtt/+'));
 
+mqttClient.on('message', (topic, msg) => 
+{
+    const device = topic.split('/')[1];
+    const data = JSON.parse(msg);
+    
+    if (data.availability === 'online' || data.state) 
+    {
+        const { value } = getState.get();
+        if (data.state && data.state !== value) 
+        {
+            mqttClient.publish(`zigbee2mqtt/${device}/set`, JSON.stringify({ state: value }));
+        } 
+        else if (data.availability === 'online') 
+        {
+            mqttClient.publish(`zigbee2mqtt/${device}/set`, JSON.stringify({ state: value }));
+        }
+    }
+});
+
 app.get('/state', (req, res) => 
 {
     const { value } = getState.get();
